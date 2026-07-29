@@ -2,16 +2,15 @@ name: Convert Loyalsoldier Domain Rules to MRS
 
 on:
   schedule:
-    # 每天北京时间 02:00 自动运行（UTC 18:00）
-    - cron: '0 18 * * *'
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 18 * * *'   # 北京时间约 02:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   convert:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write   # 必须有写权限才能推送
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,11 +24,21 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # 切换到 release 分支（不存在则创建）
           git checkout -B release
-          
-          # 只提交 mrs 目录
           git add mrs/
-          git commit -m "Update MRS rules $(date +'%Y-%m-%d %H:%M')" || echo "没有变化，跳过提交"
+          git commit -m "Update MRS rules $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
           git push origin release --force
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mrs-${{ github.run_number }}
+          name: MRS Rules ${{ github.run_number }}
+          body: |
+            自动转换自 Loyalsoldier/clash-rules
+            更新时间: ${{ github.event.head_commit.timestamp || 'scheduled' }}
+          files: |
+            mrs/*.mrs
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
