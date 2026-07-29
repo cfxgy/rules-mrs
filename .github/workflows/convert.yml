@@ -2,7 +2,7 @@ name: Convert Loyalsoldier Domain Rules to MRS
 
 on:
   schedule:
-    - cron: '0 18 * * *'   # 北京时间约 02:00
+    - cron: '0 18 * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run convert script
         run: |
@@ -26,17 +26,22 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B release
           git add mrs/
-          git commit -m "Update MRS rules $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
+          git commit -m "Update MRS rules $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M')" || echo "No changes"
           git push origin release --force
 
+      - name: Get Beijing time
+        id: time
+        run: |
+          echo "stamp=$(TZ=Asia/Shanghai date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: mrs-${{ github.run_number }}
-          name: MRS Rules ${{ github.run_number }}
+          tag_name: ${{ steps.time.outputs.stamp }}
+          name: ${{ steps.time.outputs.stamp }}
           body: |
             自动转换自 Loyalsoldier/clash-rules
-            更新时间: ${{ github.event.head_commit.timestamp || 'scheduled' }}
+            生成时间（北京时间）: ${{ steps.time.outputs.stamp }}
           files: |
             mrs/*.mrs
           make_latest: true
