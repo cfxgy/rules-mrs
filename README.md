@@ -127,7 +127,7 @@ https://raw.githubusercontent.com/cfxgy/rules-mrs/release/mrs/文件名.mrs
 
 ## 自动更新
 
-- 每天北京时间 **02:00** 自动从 Loyalsoldier 拉取最新规则并转换为 MRS
+- 每天北京时间 **03:00** 自动从 Loyalsoldier 拉取最新规则并转换为 MRS
 - 支持手动触发（Actions → Run workflow）
 
 ## 本地转换方法
